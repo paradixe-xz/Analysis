@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+const { v4: uuidv4 } = require('uuid'); // Agregar esta dependencia
 
 const logger = require('./utils/logger');
 const callRoutes = require('./routes/callRoutes');
@@ -30,9 +31,34 @@ app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Logging middleware
+// Middleware de logging mejorado
 app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.path} - ${req.ip}`);
+  // Generar ID único para la request
+  req.requestId = uuidv4();
+  req.startTime = Date.now();
+  
+  // Logger contextual para esta request
+  req.logger = logger.withContext({
+    requestId: req.requestId,
+    service: 'api'
+  });
+  
+  req.logger.info(`${req.method} ${req.path}`, {
+    ip: req.ip,
+    userAgent: req.get('User-Agent'),
+    body: req.method === 'POST' ? req.body : undefined
+  });
+  
+  // Log cuando la response termine
+  res.on('finish', () => {
+    const duration = Date.now() - req.startTime;
+    req.logger.info(`${req.method} ${req.path} completed`, {
+      statusCode: res.statusCode,
+      duration: `${duration}ms`,
+      contentLength: res.get('Content-Length')
+    });
+  });
+  
   next();
 });
 
@@ -50,11 +76,23 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Error handling middleware
+// Error handling middleware mejorado
 app.use((err, req, res, next) => {
-  logger.error('Error:', err);
+  const errorLogger = req.logger || logger;
+  
+  errorLogger.error('Request error occurred', {
+    error: err.message,
+    stack: err.stack,
+    url: req.url,
+    method: req.method,
+    body: req.body,
+    params: req.params,
+    query: req.query
+  });
+  
   res.status(500).json({ 
     error: 'Error interno del servidor',
+    requestId: req.requestId,
     message: process.env.NODE_ENV === 'development' ? err.message : 'Algo salió mal'
   });
 });
