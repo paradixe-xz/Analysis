@@ -28,19 +28,16 @@ export function Dashboard({ dateRange }: DashboardProps) {
       const fromDate = dateRange.from?.toISOString().split('T')[0]
       const toDate = dateRange.to?.toISOString().split('T')[0]
       
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/analysis/analyze-calls`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            startDate: fromDate,
-            endDate: toDate
-          })
-        }
-      )
+      const response = await fetch('/api/analysis/analyze-calls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          startDate: fromDate,
+          endDate: toDate
+        })
+      })
       
       if (!response.ok) {
         throw new Error('Error al obtener estadísticas')

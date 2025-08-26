@@ -33,9 +33,9 @@ export function CallsTable({ dateRange }: CallsTableProps) {
       const fromDate = dateRange.from?.toISOString().split('T')[0]
       const toDate = dateRange.to?.toISOString().split('T')[0]
       
-      // Obtener llamadas - ENDPOINT CORREGIDO
+      // Obtener llamadas usando API route
       const callsResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/calls/date-range?startDate=${fromDate}&endDate=${toDate}`
+        `/api/calls/date-range?startDate=${fromDate}&endDate=${toDate}`
       )
       
       if (!callsResponse.ok) {
@@ -45,12 +45,10 @@ export function CallsTable({ dateRange }: CallsTableProps) {
       const callsData = await callsResponse.json()
       setCalls(callsData.calls || [])
       
-      // Obtener análisis para cada llamada - ENDPOINT CORREGIDO
+      // Obtener análisis para cada llamada usando API route
       const analysisPromises = (callsData.calls || []).map(async (call: Call) => {
         try {
-          const analysisResponse = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/calls/${call.id}/transcript`
-          )
+          const analysisResponse = await fetch(`/api/calls/${call.id}/transcript`)
           if (analysisResponse.ok) {
             const analysisData = await analysisResponse.json()
             return { callId: call.id, analysis: analysisData.analysis }
@@ -78,41 +76,22 @@ export function CallsTable({ dateRange }: CallsTableProps) {
     }
   }
 
-  const viewTranscript = async (call: Call) => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/calls/${call.id}/transcript`
-      )
-      
-      if (response.ok) {
-        const data = await response.json()
-        setSelectedCall({ ...call, transcript: data.transcript })
-        setShowTranscript(true)
-      }
-    } catch (err) {
-      console.error('Error fetching transcript:', err)
-    }
-  }
-
   const exportToExcel = async () => {
     try {
       const fromDate = dateRange.from?.toISOString().split('T')[0]
       const toDate = dateRange.to?.toISOString().split('T')[0]
       
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/export/excel`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: fromDate,
-            to: toDate,
-            includeTranscripts: true
-          })
-        }
-      )
+      const response = await fetch('/api/export/excel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: fromDate,
+          to: toDate,
+          includeTranscripts: true
+        })
+      })
       
       if (response.ok) {
         const blob = await response.blob()
