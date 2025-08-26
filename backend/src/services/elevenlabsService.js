@@ -65,8 +65,8 @@ class ElevenLabsService {
       duration: call.duration || 0,
       transcript: call.transcript || '',
       startTime: call.start_time ? moment.unix(call.start_time).format('YYYY-MM-DD HH:mm:ss') : null,
-      endTime: call.end_time ? moment.unix(call.end_time).format('YYYY-MM-DD HH:mm:ss') : null,
-      rawData: call
+      endTime: call.end_time ? moment.unix(call.end_time).format('YYYY-MM-DD HH:mm:ss') : null
+      // Eliminamos rawData: call para evitar referencias circulares
     };
   }
 

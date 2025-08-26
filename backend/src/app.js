@@ -80,20 +80,69 @@ app.get('/health', (req, res) => {
 app.use((err, req, res, next) => {
   const errorLogger = req.logger || logger;
   
+  // Función para serializar objetos de forma segura
+  const safeStringify = (obj) => {
+    try {
+      return JSON.stringify(obj, (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+          // Manejar objetos HTTP específicos
+          if (value.constructor && value.constructor.name === 'IncomingMessage') {
+            return '[IncomingMessage]';
+          }
+          if (value.constructor && value.constructor.name === 'ServerResponse') {
+            return '[ServerResponse]';
+          }
+          if (value.constructor && value.constructor.name === 'ClientRequest') {
+            return '[ClientRequest]';
+          }
+          if (value.constructor && value.constructor.name === 'TLSSocket') {
+            return '[TLSSocket]';
+          }
+          if (value.constructor && value.constructor.name === 'Socket') {
+            return '[Socket]';
+          }
+          // Detectar referencias circulares
+          if (value.hasOwnProperty && value.hasOwnProperty('_httpMessage')) {
+            return '[HTTP Object with circular reference]';
+          }
+        }
+        return value;
+      });
+    } catch (e) {
+      return '[Circular Structure]';
+    }
+  };
+  
+  // Función para limpiar mensajes de error
+  const cleanErrorMessage = (message) => {
+    if (typeof message !== 'string') {
+      return 'Error interno del servidor';
+    }
+    
+    // Si el mensaje contiene referencias a objetos circulares, limpiarlo
+    if (message.includes('ClientRequest') || message.includes('TLSSocket') || message.includes('circular structure')) {
+      return 'Error de conexión con servicio externo';
+    }
+    
+    return message;
+  };
+  
   errorLogger.error('Request error occurred', {
-    error: err.message,
+    error: cleanErrorMessage(err.message),
     stack: err.stack,
     url: req.url,
     method: req.method,
-    body: req.body,
-    params: req.params,
-    query: req.query
+    body: safeStringify(req.body),
+    params: safeStringify(req.params),
+    query: safeStringify(req.query)
   });
+  
+  const cleanMessage = cleanErrorMessage(err.message);
   
   res.status(500).json({ 
     error: 'Error interno del servidor',
     requestId: req.requestId,
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Algo salió mal'
+    message: process.env.NODE_ENV === 'development' ? cleanMessage : 'Algo salió mal'
   });
 });
 
