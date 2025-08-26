@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DateRange } from '@/types'
 import { DateRangePicker } from '@/components/DateRangePicker'
 import { Dashboard } from '@/components/Dashboard'
@@ -17,6 +17,11 @@ export default function HomePage() {
     to: new Date()
   })
   const [activeTab, setActiveTab] = useState('dashboard')
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -73,7 +78,7 @@ export default function HomePage() {
             <CardContent>
               <div className="flex flex-col space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Rango seleccionado: {dateRange.from?.toLocaleDateString()} - {dateRange.to?.toLocaleDateString()}
+                  Rango seleccionado: {mounted ? `${dateRange.from?.toLocaleDateString()} - ${dateRange.to?.toLocaleDateString()}` : 'Cargando...'}
                 </p>
                 <Button className="w-fit">
                   <Download className="h-4 w-4 mr-2" />

@@ -253,7 +253,7 @@ export function CallsTable({ dateRange }: CallsTableProps) {
                       <td className="p-4">
                         <div className="text-sm">
                           <div>{formatDate(new Date(call.created_at))}</div>
-                          <div className="text-muted-foreground">
+                          <div className="text-muted-foreground" suppressHydrationWarning>
                             {new Date(call.created_at).toLocaleTimeString()}
                           </div>
                         </div>
