@@ -14,6 +14,30 @@ class ElevenLabsService {
   }
 
   /**
+   * Limpia errores de axios para evitar referencias circulares
+   */
+  cleanAxiosError(error) {
+    if (error.response) {
+      return {
+        message: error.message,
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data
+      };
+    }
+    if (error.request) {
+      return {
+        message: error.message,
+        code: error.code,
+        type: 'request_error'
+      };
+    }
+    return {
+      message: error.message || 'Error desconocido'
+    };
+  }
+
+  /**
    * Obtiene llamadas de ElevenLabs en un rango de fechas
    * @param {string} startDate - Fecha de inicio (YYYY-MM-DD)
    * @param {string} endDate - Fecha de fin (YYYY-MM-DD)
@@ -46,8 +70,9 @@ class ElevenLabsService {
       
       return calls.map(call => this.formatCallData(call));
     } catch (error) {
-      logger.error('Error obteniendo llamadas de ElevenLabs:', error);
-      throw new Error(`Error al obtener llamadas: ${error.message}`);
+      const cleanError = this.cleanAxiosError(error);
+      logger.error('Error obteniendo llamadas de ElevenLabs:', cleanError);
+      throw new Error(`Error al obtener llamadas: ${cleanError.message}`);
     }
   }
 
@@ -88,7 +113,8 @@ class ElevenLabsService {
 
       return response.data.transcript || '';
     } catch (error) {
-      logger.error(`Error obteniendo transcript para ${conversationId}:`, error);
+      const cleanError = this.cleanAxiosError(error);
+      logger.error(`Error obteniendo transcript para ${conversationId}:`, cleanError);
       return '';
     }
   }
