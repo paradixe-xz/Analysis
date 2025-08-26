@@ -3,7 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
-const { v4: uuidv4 } = require('uuid'); // Agregar esta dependencia
+const { v4: uuidv4 } = require('uuid');
 
 const logger = require('./utils/logger');
 const callRoutes = require('./routes/callRoutes');
@@ -13,6 +13,9 @@ const exportRoutes = require('./routes/exportRoutes');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Configurar trust proxy para RunPod
+app.set('trust proxy', 1);
+
 // Middleware de seguridad
 app.use(helmet());
 app.use(cors({
@@ -20,10 +23,17 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiting
+// Rate limiting con configuración para proxy
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100 // límite de 100 requests por ventana de tiempo
+  max: 100, // límite de 100 requests por ventana de tiempo
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Configuración específica para proxies
+  validate: {
+    xForwardedForHeader: false, // Deshabilitar validación del header X-Forwarded-For
+    trustProxy: false // Deshabilitar validación de trust proxy
+  }
 });
 app.use(limiter);
 
