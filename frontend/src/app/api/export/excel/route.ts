@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+// Cambiar a la URL de RunPod
+const BACKEND_URL = process.env.BACKEND_URL || 'https://c9d4sqomvuc6wy-3001.proxy.runpod.net'
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,27 +12,24 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     })
-    
+
     if (!response.ok) {
-      throw new Error(`Backend error: ${response.status}`)
+      throw new Error(`Backend responded with status: ${response.status}`)
     }
-    
-    // Para archivos Excel, necesitamos manejar el blob
+
     const blob = await response.blob()
-    
     return new NextResponse(blob, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': 'attachment; filename="call-analysis.xlsx"'
-      }
+        'Content-Disposition': 'attachment; filename="llamadas.xlsx"',
+      },
     })
-    
   } catch (error) {
-    console.error('API Route Error:', error)
+    console.error('Error in export/excel API route:', error)
     return NextResponse.json(
-      { error: 'Error connecting to backend' },
+      { error: 'Failed to export Excel', details: error.message },
       { status: 500 }
     )
   }
