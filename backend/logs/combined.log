@@ -155,3 +155,11 @@
 2025-08-26 23:20:08.238 [INFO] [call-analysis-api]: Servidor corriendo en puerto 3001
 2025-08-26 23:20:17.565 [INFO] [call-analysis-api]: ElevenLabs Service initialized with: | Meta: {"apiKey":"sk-proj-xx...","agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","baseUrl":"https://api.elevenlabs.io/v1"}
 2025-08-26 23:20:17.819 [INFO] [call-analysis-api]: Servidor corriendo en puerto 3001
+2025-08-26 23:22:16.303 [INFO] [call-analysis-api]: ElevenLabs Service initialized with: | Meta: {"apiKey":"sk-proj-xx...","agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","baseUrl":"https://api.elevenlabs.io/v1"}
+2025-08-26 23:22:16.558 [INFO] [call-analysis-api]: Servidor corriendo en puerto 3001
+2025-08-26 23:24:02.183 [INFO] [call-analysis-api]: ElevenLabs Service initialized with: | Meta: {"apiKey":"sk-proj-xx...","agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","baseUrl":"https://api.elevenlabs.io/v1"}
+2025-08-26 23:24:02.435 [INFO] [call-analysis-api]: Servidor corriendo en puerto 3001
+2025-08-26 23:24:14.617 [INFO] [call-analysis-api]: ElevenLabs Service initialized with: | Meta: {"apiKey":"sk-proj-xx...","agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","baseUrl":"https://api.elevenlabs.io/v1"}
+2025-08-26 23:24:14.868 [INFO] [call-analysis-api]: Servidor corriendo en puerto 3001
+2025-08-26 23:24:22.710 [INFO] [call-analysis-api]: ElevenLabs Service initialized with: | Meta: {"apiKey":"sk-proj-xx...","agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","baseUrl":"https://api.elevenlabs.io/v1"}
+2025-08-26 23:24:22.957 [INFO] [call-analysis-api]: Servidor corriendo en puerto 3001

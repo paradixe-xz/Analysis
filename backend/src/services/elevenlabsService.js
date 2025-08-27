@@ -123,7 +123,9 @@ class ElevenLabsService {
    */
   async getCallsByDateRange(startDate, endDate) {
     try {
+      logger.info('=== INICIO GETCALLSBYDATERANGE ===');
       logger.info(`Obteniendo llamadas desde ${startDate} hasta ${endDate}`);
+      logger.info('Test log simple para verificar logger');
       
       const startTimestamp = moment(startDate).startOf('day').unix();
       const endTimestamp = moment(endDate).endOf('day').unix();
@@ -156,27 +158,33 @@ class ElevenLabsService {
       logger.info('=== RESPUESTA DE ELEVENLABS ===');
       logger.info('Status:', response.status);
       logger.info('Status Text:', response.statusText);
+      logger.info('Response headers:', JSON.stringify(response.headers, null, 2));
       logger.info('Response data type:', typeof response.data);
       logger.info('Response data keys:', Object.keys(response.data || {}));
+      logger.info('Response data raw:', JSON.stringify(response.data, null, 2));
       logger.info('Conversations array type:', typeof response.data.conversations);
       logger.info('Conversations array length:', response.data.conversations ? response.data.conversations.length : 'undefined');
       
       if (response.data.conversations && response.data.conversations.length > 0) {
-        logger.info('Primera conversación:', JSON.stringify(response.data.conversations[0], null, 2));
+        logger.info('Primera conversación raw:', JSON.stringify(response.data.conversations[0], null, 2));
       }
       logger.info('=== FIN RESPUESTA DE ELEVENLABS ===');
 
       // Procesar conversaciones
       const calls = [];
+      logger.info('=== INICIO PROCESAMIENTO DE CONVERSACIONES ===');
+      
       if (response.data.conversations && Array.isArray(response.data.conversations)) {
         logger.info(`Procesando ${response.data.conversations.length} conversaciones`);
         
         for (let i = 0; i < response.data.conversations.length; i++) {
           const conversation = response.data.conversations[i];
-          logger.info(`Procesando conversación ${i + 1}/${response.data.conversations.length}:`, {
-            conversationId: conversation.conversation_id,
-            status: conversation.status
-          });
+          logger.info(`=== CONVERSACIÓN ${i + 1}/${response.data.conversations.length} ===`);
+          logger.info('Conversation object:', JSON.stringify(conversation, null, 2));
+          logger.info('Conversation type:', typeof conversation);
+          logger.info('Conversation keys:', Object.keys(conversation || {}));
+          logger.info('Conversation ID:', conversation?.conversation_id);
+          logger.info('Conversation status:', conversation?.status);
           
           const formattedCall = this.formatCallData(conversation);
           if (formattedCall) {
@@ -185,6 +193,7 @@ class ElevenLabsService {
           } else {
             logger.error(`Conversación ${i + 1} falló al formatear`);
           }
+          logger.info(`=== FIN CONVERSACIÓN ${i + 1} ===`);
         }
       } else {
         logger.error('No se encontraron conversaciones en la respuesta o no es un array');
@@ -193,6 +202,7 @@ class ElevenLabsService {
       }
       
       logger.info(`Total de llamadas procesadas: ${calls.length}`);
+      logger.info('=== FIN PROCESAMIENTO DE CONVERSACIONES ===');
       
       return calls;
     } catch (error) {
