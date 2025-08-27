@@ -44,7 +44,39 @@ export function Dashboard({ dateRange }: DashboardProps) {
       }
       
       const data = await response.json()
-      setStats(data.stats)
+      const resolvedStats = (data && data.data && data.data.stats) ? data.data.stats : data.stats
+      const totalCalls = (data && data.data && typeof data.data.totalCalls === 'number') ? data.data.totalCalls : data.totalCalls
+
+      // Normalizar a la forma { total, byCategory, averageConfidence }
+      let normalizedStats: AnalysisStats | null = null
+      if (resolvedStats) {
+        const byCategory: Record<CallCategory, number> = {
+          'Failed': 0,
+          'Hangup': 0,
+          'Lead': 0,
+          'No Answer': 0,
+          'Non-Viable Client': 0,
+          'Not Interested': 0,
+          'Recall': 0,
+          'Voicemail': 0,
+          'Wrong Number': 0,
+          'Completed': 0,
+        }
+        // Copiar contadores por categoría si existen en resolvedStats
+        Object.keys(resolvedStats).forEach((key) => {
+          if (key !== 'averageConfidence' && (key as any) in byCategory) {
+            // @ts-ignore - key validated above
+            byCategory[key] = resolvedStats[key] || 0
+          }
+        })
+        normalizedStats = {
+          total: typeof totalCalls === 'number' ? totalCalls : 0,
+          byCategory,
+          averageConfidence: resolvedStats.averageConfidence || 0,
+        }
+      }
+
+      setStats(normalizedStats)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido')
     } finally {
