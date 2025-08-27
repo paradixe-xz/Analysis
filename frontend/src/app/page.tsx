@@ -24,21 +24,23 @@ export default function HomePage() {
   }, [])
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 fade-in">
       {/* Header */}
-      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Call Analysis Dashboard</h1>
-          <p className="text-muted-foreground">
-            Analiza y gestiona las llamadas de ElevenLabs con inteligencia artificial
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <CalendarDays className="h-4 w-4" />
-          <DateRangePicker
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-          />
+      <div className="glass-panel p-5">
+        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Call Analysis Dashboard</h1>
+            <p className="text-muted-foreground">
+              Analiza y gestiona las llamadas de ElevenLabs con inteligencia artificial
+            </p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <CalendarDays className="h-4 w-4" />
+            <DateRangePicker
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+            />
+          </div>
         </div>
       </div>
 
@@ -68,7 +70,7 @@ export default function HomePage() {
         </TabsContent>
 
         <TabsContent value="export" className="space-y-4">
-          <Card>
+          <Card className="glass-panel">
             <CardHeader>
               <CardTitle>Exportar Datos</CardTitle>
               <CardDescription>

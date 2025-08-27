@@ -43,10 +43,25 @@ export function CallsTable({ dateRange }: CallsTableProps) {
       }
       
       const callsData = await callsResponse.json()
-      setCalls(callsData.calls || [])
+      const rawCalls = (callsData && callsData.data) ? callsData.data : (callsData.calls || [])
+
+      // Normalizar al tipo Call esperado por la tabla
+      const normalizedCalls: Call[] = (rawCalls || []).map((c: any) => ({
+        id: c.id,
+        caller_name: c.name || c.agentName || 'Desconocido',
+        caller_number: c.phone || '',
+        status: c.status || 'unknown',
+        duration_seconds: c.duration || c.duration_seconds || 0,
+        transcript: c.transcript || '',
+        created_at: c.timestamp || c.startTime || new Date().toISOString(),
+        updated_at: c.endTime || undefined,
+        rawData: c,
+      }))
+
+      setCalls(normalizedCalls)
       
       // Obtener análisis para cada llamada usando API route
-      const analysisPromises = (callsData.calls || []).map(async (call: Call) => {
+      const analysisPromises = (normalizedCalls || []).map(async (call: Call) => {
         try {
           const analysisResponse = await fetch(`/api/calls/${call.id}/transcript`)
           if (analysisResponse.ok) {
@@ -74,6 +89,11 @@ export function CallsTable({ dateRange }: CallsTableProps) {
     } finally {
       setLoading(false)
     }
+  }
+
+  const viewTranscript = (call: Call) => {
+    setSelectedCall(call)
+    setShowTranscript(true)
   }
 
   const exportToExcel = async () => {
@@ -128,7 +148,7 @@ export function CallsTable({ dateRange }: CallsTableProps) {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="glass-panel">
         <CardContent className="flex items-center justify-center h-32">
           <RefreshCw className="h-6 w-6 animate-spin" />
           <span className="ml-2">Cargando llamadas...</span>
@@ -139,7 +159,7 @@ export function CallsTable({ dateRange }: CallsTableProps) {
 
   if (error) {
     return (
-      <Card>
+      <Card className="glass-panel">
         <CardContent className="flex items-center justify-center h-32">
           <div className="text-center">
             <p className="text-sm text-red-500 mb-2">{error}</p>
@@ -156,7 +176,7 @@ export function CallsTable({ dateRange }: CallsTableProps) {
   return (
     <div className="space-y-4">
       {/* Controles */}
-      <Card>
+      <Card className="glass-panel">
         <CardHeader>
           <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
             <div>
@@ -185,7 +205,7 @@ export function CallsTable({ dateRange }: CallsTableProps) {
                 <input
                   type="text"
                   placeholder="Buscar por nombre o número..."
-                  className="w-full pl-8 pr-4 py-2 border rounded-md"
+                  className="input-base"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -194,7 +214,7 @@ export function CallsTable({ dateRange }: CallsTableProps) {
             <div className="flex items-center space-x-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
               <select
-                className="px-3 py-2 border rounded-md"
+                className="px-3 py-2 border rounded-md bg-white dark:bg-slate-900"
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value as CallCategory | 'all')}
               >
@@ -209,9 +229,9 @@ export function CallsTable({ dateRange }: CallsTableProps) {
       </Card>
 
       {/* Tabla */}
-      <Card>
+      <Card className="glass-panel">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto table-sticky zebra">
             <table className="w-full">
               <thead className="border-b">
                 <tr className="text-left">
@@ -304,7 +324,7 @@ export function CallsTable({ dateRange }: CallsTableProps) {
       {/* Modal de transcripción */}
       {showTranscript && selectedCall && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-4xl max-h-[80vh] overflow-hidden">
+          <Card className="w-full max-w-4xl max-h-[80vh] overflow-hidden glass-panel">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>

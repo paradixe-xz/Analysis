@@ -25,24 +25,24 @@ class ElevenLabsService {
    */
   cleanAxiosError(error) {
     try {
-      if (error.response) {
-        return {
-          message: error.message,
-          status: error.response.status,
-          statusText: error.response.statusText,
-          data: error.response.data ? JSON.stringify(error.response.data) : null
-        };
-      }
-      if (error.request) {
-        return {
-          message: error.message,
-          code: error.code,
-          type: 'request_error'
-        };
-      }
+    if (error.response) {
       return {
-        message: error.message || 'Error desconocido'
+        message: error.message,
+        status: error.response.status,
+        statusText: error.response.statusText,
+          data: error.response.data ? JSON.stringify(error.response.data) : null
       };
+    }
+    if (error.request) {
+      return {
+        message: error.message,
+        code: error.code,
+        type: 'request_error'
+      };
+    }
+    return {
+      message: error.message || 'Error desconocido'
+    };
     } catch (cleanError) {
       return {
         message: 'Error al limpiar error de Axios',
@@ -146,9 +146,9 @@ class ElevenLabsService {
       });
       
       const response = await axios.get(requestUrl, {
-        headers: {
-          'xi-api-key': this.apiKey
-        },
+          headers: {
+            'xi-api-key': this.apiKey
+          },
         params: requestParams
       });
 
