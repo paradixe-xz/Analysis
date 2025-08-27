@@ -73,10 +73,17 @@ if (process.env.NODE_ENV !== 'production') {
       winston.format.timestamp({
         format: 'HH:mm:ss.SSS'
       }),
-      winston.format.printf(({ timestamp, level, message, service, requestId }) => {
+      winston.format.printf(({ timestamp, level, message, service, requestId, userId, ...meta }) => {
         let logMessage = `${timestamp} [${level}]`;
         if (service) logMessage += ` [${service}]`;
         if (requestId) logMessage += ` [${requestId}]`;
+        if (userId) logMessage += ` [User: ${userId}]`;
+        
+        // Incluir metadata como JSON cuando esté presente
+        if (meta && Object.keys(meta).length > 0) {
+          return `${logMessage}: ${message} ${JSON.stringify(meta)}`;
+        }
+        
         return `${logMessage}: ${message}`;
       })
     )

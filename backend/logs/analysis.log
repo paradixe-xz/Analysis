@@ -77,3 +77,9 @@
 {"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:32:01.544"}
 {"agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","apiKey":"sk-proj-xx...","baseUrl":"https://api.elevenlabs.io/v1","level":"info","message":"ElevenLabs Service initialized with:","service":"call-analysis-api","timestamp":"2025-08-26 23:32:11.630"}
 {"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:32:11.883"}
+{"agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","apiKey":"sk-proj-xx...","baseUrl":"https://api.elevenlabs.io/v1","level":"info","message":"ElevenLabs Service initialized with:","service":"call-analysis-api","timestamp":"2025-08-26 23:33:25.974"}
+{"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:33:26.172"}
+{"agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","apiKey":"sk-proj-xx...","baseUrl":"https://api.elevenlabs.io/v1","level":"info","message":"ElevenLabs Service initialized with:","service":"call-analysis-api","timestamp":"2025-08-26 23:35:07.592"}
+{"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:35:07.843"}
+{"agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","apiKey":"sk-proj-xx...","baseUrl":"https://api.elevenlabs.io/v1","level":"info","message":"ElevenLabs Service initialized with:","service":"call-analysis-api","timestamp":"2025-08-27 08:20:04.020"}
+{"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-27 08:20:04.373"}
