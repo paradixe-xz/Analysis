@@ -8,6 +8,13 @@ class ElevenLabsService {
     this.agentId = process.env.ELEVENLABS_AGENT_ID;
     this.baseUrl = process.env.ELEVENLABS_BASE_URL || 'https://api.elevenlabs.io/v1';
     
+    // Debug logging
+    logger.info('ElevenLabs Service initialized with:', {
+      apiKey: this.apiKey ? `${this.apiKey.substring(0, 10)}...` : 'undefined',
+      agentId: this.agentId,
+      baseUrl: this.baseUrl
+    });
+    
     if (!this.apiKey || !this.agentId) {
       throw new Error('ElevenLabs API key y Agent ID son requeridos');
     }
@@ -121,20 +128,37 @@ class ElevenLabsService {
       const startTimestamp = moment(startDate).startOf('day').unix();
       const endTimestamp = moment(endDate).endOf('day').unix();
       
-      const response = await axios.get(
-        `${this.baseUrl}/convai/conversations`,
-        {
-          headers: {
-            'xi-api-key': this.apiKey
-          },
-          params: {
-            agent_id: this.agentId,
-            start_time: startTimestamp,
-            end_time: endTimestamp,
-            page_size: 1000
-          }
+      // Debug logging de la request
+      const requestUrl = `${this.baseUrl}/convai/conversations`;
+      const requestParams = {
+        agent_id: this.agentId,
+        start_time: startTimestamp,
+        end_time: endTimestamp,
+        page_size: 100  // Reducido de 1000 a 100
+      };
+      
+      logger.info('Making request to ElevenLabs:', {
+        url: requestUrl,
+        params: requestParams,
+        headers: {
+          'xi-api-key': this.apiKey ? `${this.apiKey.substring(0, 10)}...` : 'undefined'
         }
-      );
+      });
+      
+      const response = await axios.get(requestUrl, {
+        headers: {
+          'xi-api-key': this.apiKey
+        },
+        params: requestParams
+      });
+
+      // Debug logging de la response
+      logger.info('ElevenLabs response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        dataKeys: response.data ? Object.keys(response.data) : 'no data',
+        conversationsCount: response.data?.conversations?.length || 0
+      });
 
       // Limpiar datos de respuesta para evitar referencias circulares
       const cleanResponseData = this.cleanResponseData(response.data);
@@ -144,6 +168,18 @@ class ElevenLabsService {
       
       return calls.map(call => this.formatCallData(call));
     } catch (error) {
+      // Debug logging del error
+      logger.error('Error completo de Axios:', {
+        message: error.message,
+        code: error.code,
+        response: error.response ? {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        } : 'no response',
+        request: error.request ? 'request object exists' : 'no request'
+      });
+      
       const cleanError = this.cleanAxiosError(error);
       logger.error('Error obteniendo llamadas de ElevenLabs:', cleanError);
       throw new Error(`Error al obtener llamadas: ${cleanError.message}`);
