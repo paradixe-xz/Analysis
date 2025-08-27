@@ -128,102 +128,64 @@ class ElevenLabsService {
       const startTimestamp = moment(startDate).startOf('day').unix();
       const endTimestamp = moment(endDate).endOf('day').unix();
       
-      // Debug logging de la request
-      const requestUrl = `${this.baseUrl}/convai/conversations`;
-      const requestParams = {
-        agent_id: this.agentId,
-        start_time: startTimestamp,
-        end_time: endTimestamp,
-        page_size: 100  // Reducido de 1000 a 100
-      };
-      
-      logger.info('Making request to ElevenLabs:', {
-        url: requestUrl,
-        params: requestParams,
-        headers: {
-          'xi-api-key': this.apiKey ? `${this.apiKey.substring(0, 10)}...` : 'undefined'
-        }
-      });
-      
-      const response = await axios.get(requestUrl, {
+      // Paginación: recorrer todas las páginas usando next_cursor
+      const allCalls = [];
+      let nextCursor = null;
+      const pageSize = 100; // permitido por la API
+      let page = 1;
+      const maxPages = 100; // seguridad para evitar bucles infinitos
+
+      do {
+        // Debug logging de la request
+        const requestUrl = `${this.baseUrl}/convai/conversations`;
+        const requestParams = {
+          agent_id: this.agentId,
+          start_time: startTimestamp,
+          end_time: endTimestamp,
+          page_size: pageSize,
+          cursor: nextCursor || undefined
+        };
+        
+        logger.info('Making request to ElevenLabs (paged):', {
+          url: requestUrl,
+          page,
+          cursor: nextCursor,
+          params: requestParams,
+          headers: {
+            'xi-api-key': this.apiKey ? `${this.apiKey.substring(0, 10)}...` : 'undefined'
+          }
+        });
+        
+        const response = await axios.get(requestUrl, {
           headers: {
             'xi-api-key': this.apiKey
           },
-        params: requestParams
-      });
+          params: requestParams
+        });
 
-      // Debug logging de la respuesta RAW
-      logger.info('=== RESPUESTA RAW DE AXIOS ===');
-      logger.info('Response status:', response.status);
-      logger.info('Response statusText:', response.statusText);
-      logger.info('Response headers:', response.headers);
-      logger.info('Response data type:', typeof response.data);
-      logger.info('Response data length:', response.data ? JSON.stringify(response.data).length : 'undefined');
-      logger.info('=== FIN RESPUESTA RAW DE AXIOS ===');
+        // Resumen de la página
+        const conversations = Array.isArray(response.data?.conversations) ? response.data.conversations : [];
+        logger.info('Página recibida de ElevenLabs:', {
+          page,
+          received: conversations.length,
+          has_more: response.data?.has_more,
+          next_cursor: response.data?.next_cursor
+        });
 
-      // Debug logging de la respuesta
-      logger.info('=== RESPUESTA DE ELEVENLABS ===');
-      logger.info('Status:', response.status);
-      logger.info('Status Text:', response.statusText);
-      logger.info('Response data type:', typeof response.data);
-      logger.info('Response data keys:', Object.keys(response.data || {}));
-      logger.info('Conversations array type:', typeof response.data.conversations);
-      logger.info('Conversations array length:', response.data.conversations ? response.data.conversations.length : 'undefined');
-      
-      if (response.data.conversations && response.data.conversations.length > 0) {
-        logger.info('Primera conversación:', JSON.stringify(response.data.conversations[0], null, 2));
-        logger.info('Primera conversación tipo:', typeof response.data.conversations[0]);
-        logger.info('Primera conversación keys:', Object.keys(response.data.conversations[0] || {}));
-      }
-      logger.info('=== FIN RESPUESTA DE ELEVENLABS ===');
-
-      // Procesar conversaciones
-      const calls = [];
-      if (response.data.conversations && Array.isArray(response.data.conversations)) {
-        logger.info(`Procesando ${response.data.conversations.length} conversaciones`);
-        
-        // DEBUG: Verificar la primera conversación ANTES del bucle
-        const firstConversation = response.data.conversations[0];
-        logger.info('=== DEBUG PRIMERA CONVERSACIÓN ===');
-        logger.info('First conversation raw:', firstConversation);
-        logger.info('First conversation type:', typeof firstConversation);
-        logger.info('First conversation keys:', Object.keys(firstConversation || {}));
-        logger.info('First conversation JSON:', JSON.stringify(firstConversation, null, 2));
-        logger.info('=== FIN DEBUG PRIMERA CONVERSACIÓN ===');
-        
-        for (let i = 0; i < response.data.conversations.length; i++) {
-          const conversation = response.data.conversations[i];
-          
-          // DEBUG: Verificar cada conversación ANTES de formatear
-          logger.info(`=== DEBUG CONVERSACIÓN ${i + 1} ===`);
-          logger.info(`Conversación ${i + 1} raw:`, conversation);
-          logger.info(`Conversación ${i + 1} type:`, typeof conversation);
-          logger.info(`Conversación ${i + 1} keys:`, Object.keys(conversation || {}));
-          logger.info(`Conversación ${i + 1} JSON:`, JSON.stringify(conversation, null, 2));
-          logger.info(`=== FIN DEBUG CONVERSACIÓN ${i + 1} ===`);
-          
-          logger.info(`Procesando conversación ${i + 1}/${response.data.conversations.length}:`, {
-            conversationId: conversation.conversation_id, // Usar el nombre correcto del campo
-            status: conversation.status
-          });
-          
-          const formattedCall = this.formatCallData(conversation);
-          if (formattedCall) {
-            calls.push(formattedCall);
-            logger.info(`Conversación ${i + 1} formateada exitosamente`);
-          } else {
-            logger.error(`Conversación ${i + 1} falló al formatear`);
-          }
+        // Formatear y acumular
+        for (let i = 0; i < conversations.length; i++) {
+          const formatted = this.formatCallData(conversations[i]);
+          if (formatted) allCalls.push(formatted);
         }
-      } else {
-        logger.error('No se encontraron conversaciones en la respuesta o no es un array');
-        logger.error('Tipo de conversations:', typeof response.data.conversations);
-        logger.error('Valor de conversations:', response.data.conversations);
-      }
+
+        // Actualizar cursor/página
+        nextCursor = response.data?.next_cursor || null;
+        page += 1;
+      } while (nextCursor && page <= maxPages);
+
+      logger.info(`Total de llamadas procesadas (todas las páginas): ${allCalls.length}`);
       
-      logger.info(`Total de llamadas procesadas: ${calls.length}`);
-      
-      return calls;
+      return allCalls;
     } catch (error) {
       // Debug logging del error
       logger.error('Error completo de Axios:', {

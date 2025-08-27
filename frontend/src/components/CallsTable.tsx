@@ -20,6 +20,8 @@ export function CallsTable({ dateRange }: CallsTableProps) {
   const [showTranscript, setShowTranscript] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState<CallCategory | 'all'>('all')
+  const [page, setPage] = useState(1)
+  const pageSize = 20
 
   useEffect(() => {
     fetchCalls()
@@ -141,6 +143,13 @@ export function CallsTable({ dateRange }: CallsTableProps) {
     return matchesSearch && matchesCategory
   })
 
+  const paginatedCalls = filteredCalls.slice((page - 1) * pageSize, page * pageSize)
+  const totalPages = Math.max(1, Math.ceil(filteredCalls.length / pageSize))
+
+  useEffect(() => {
+    setPage(1)
+  }, [searchTerm, filterCategory, calls.length])
+
   const categories: CallCategory[] = [
     'Failed', 'Hangup', 'Lead', 'No Answer', 'Non-Viable Client',
     'Not Interested', 'Recall', 'Voicemail', 'Wrong Number', 'Completed'
@@ -245,7 +254,7 @@ export function CallsTable({ dateRange }: CallsTableProps) {
                 </tr>
               </thead>
               <tbody>
-                {filteredCalls.map((call) => {
+                {paginatedCalls.map((call) => {
                   const analysis = analyses[call.id]
                   return (
                     <tr key={call.id} className="border-b hover:bg-muted/50">
@@ -320,6 +329,19 @@ export function CallsTable({ dateRange }: CallsTableProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Paginación cliente */}
+      {filteredCalls.length > 0 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Mostrando {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, filteredCalls.length)} de {filteredCalls.length}
+          </div>
+          <div className="space-x-2">
+            <Button size="sm" variant="outline" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Anterior</Button>
+            <Button size="sm" variant="outline" disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Siguiente</Button>
+          </div>
+        </div>
+      )}
 
       {/* Modal de transcripción */}
       {showTranscript && selectedCall && (

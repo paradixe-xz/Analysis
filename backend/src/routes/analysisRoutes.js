@@ -37,6 +37,11 @@ router.post('/analyze-calls', async (req, res) => {
       });
     }
 
+    // Paginación (opcional)
+    const page = Math.max(1, parseInt(req.body.page, 10) || 1);
+    const rawPageSize = parseInt(req.body.pageSize, 10) || 100;
+    const pageSize = Math.min(Math.max(1, rawPageSize), 200); // cap de seguridad
+
     // Validación de formato de fecha
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
@@ -53,7 +58,7 @@ router.post('/analyze-calls', async (req, res) => {
 
     contextLogger.info('Starting call retrieval from ElevenLabs');
     
-    // Obtener llamadas de ElevenLabs
+    // Obtener llamadas de ElevenLabs (todas las páginas)
     const calls = await elevenlabsService.getCallsByDateRange(startDate, endDate);
     
     contextLogger.info('Calls retrieved from ElevenLabs', {
@@ -69,20 +74,40 @@ router.post('/analyze-calls', async (req, res) => {
         message: 'No se encontraron llamadas en el rango de fechas especificado',
         data: {
           results: [],
-          stats: {},
+          stats: { averageConfidence: 0 },
           totalCalls: 0,
-          analyzedAt: new Date().toISOString()
-        }
+          analyzedAt: new Date().toISOString(),
+          page,
+          pageSize,
+          totalPages: 0,
+          hasMore: false
+        },
+        dateRange: { startDate, endDate }
       });
     }
 
-    contextLogger.info('Starting call analysis process');
+    // Calcular paginación
+    const totalCalls = calls.length;
+    const totalPages = Math.max(1, Math.ceil(totalCalls / pageSize));
+    const currentPage = Math.min(page, totalPages);
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalCalls);
+    const pageCalls = calls.slice(startIndex, endIndex);
+
+    contextLogger.info('Starting call analysis process', {
+      page: currentPage,
+      pageSize,
+      startIndex,
+      endIndex
+    });
     
-    // Analizar llamadas
-    const analysisResult = await analysisService.analyzeCalls(calls);
+    // Analizar llamadas de la página
+    const analysisResult = await analysisService.analyzeCalls(pageCalls);
     
     logger.performance('Complete analysis process', startTime, {
-      totalCalls: analysisResult.totalCalls,
+      totalCalls,
+      page: currentPage,
+      pageSize,
       dateRange: { startDate, endDate },
       requestId: req.requestId
     });
@@ -92,9 +117,19 @@ router.post('/analyze-calls', async (req, res) => {
       categoriesFound: Object.keys(analysisResult.stats).length
     });
     
+    // Inyectar metadatos de paginación y total global
+    const responseData = {
+      ...analysisResult,
+      totalCalls,
+      page: currentPage,
+      pageSize,
+      totalPages,
+      hasMore: currentPage < totalPages
+    };
+    
     res.json({
       success: true,
-      data: analysisResult,
+      data: responseData,
       dateRange: { startDate, endDate }
     });
     
