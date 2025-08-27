@@ -13,8 +13,9 @@ const exportRoutes = require('./routes/exportRoutes');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Configurar trust proxy para RunPod
-app.set('trust proxy', 1);
+// Configurar trust proxy para manejar headers de proxy correctamente
+// Esto es necesario cuando la app está detrás de un proxy (como en RunPod)
+app.set('trust proxy', true);
 
 // Middleware de seguridad
 app.use(helmet());
@@ -23,7 +24,7 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiting con configuración para proxy
+// Rate limiting con configuración mejorada para proxies
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
   max: 100, // límite de 100 requests por ventana de tiempo
@@ -33,6 +34,12 @@ const limiter = rateLimit({
   validate: {
     xForwardedForHeader: false, // Deshabilitar validación del header X-Forwarded-For
     trustProxy: false // Deshabilitar validación de trust proxy
+  },
+  // Función personalizada para generar keys que evite problemas con headers
+  keyGenerator: (req) => {
+    // Usar IP real del cliente, considerando el proxy
+    const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+    return clientIP;
   }
 });
 app.use(limiter);
@@ -111,9 +118,22 @@ app.use((err, req, res, next) => {
           if (value.constructor && value.constructor.name === 'Socket') {
             return '[Socket]';
           }
+          if (value.constructor && value.constructor.name === 'HttpClientResponse') {
+            return '[HttpClientResponse]';
+          }
+          if (value.constructor && value.constructor.name === 'HttpClientRequest') {
+            return '[HttpClientRequest]';
+          }
           // Detectar referencias circulares
           if (value.hasOwnProperty && value.hasOwnProperty('_httpMessage')) {
             return '[HTTP Object with circular reference]';
+          }
+          // Detectar objetos de Axios
+          if (value.config && value.request) {
+            return '[Axios Response Object]';
+          }
+          if (value.headers && value.status) {
+            return '[HTTP Response Object]';
           }
         }
         return value;
@@ -130,16 +150,29 @@ app.use((err, req, res, next) => {
     }
     
     // Si el mensaje contiene referencias a objetos circulares, limpiarlo
-    if (message.includes('ClientRequest') || message.includes('TLSSocket') || message.includes('circular structure')) {
+    if (message.includes('ClientRequest') || message.includes('TLSSocket') || 
+        message.includes('circular structure') || message.includes('Converting circular structure')) {
       return 'Error de conexión con servicio externo';
     }
     
     return message;
   };
   
+  // Función para limpiar el stack trace
+  const cleanStack = (stack) => {
+    if (typeof stack !== 'string') return '';
+    
+    // Remover líneas que contengan referencias circulares
+    return stack
+      .split('\n')
+      .filter(line => !line.includes('circular structure') && !line.includes('Converting circular'))
+      .slice(0, 10) // Limitar a 10 líneas
+      .join('\n');
+  };
+  
   errorLogger.error('Request error occurred', {
     error: cleanErrorMessage(err.message),
-    stack: err.stack,
+    stack: cleanStack(err.stack),
     url: req.url,
     method: req.method,
     body: safeStringify(req.body),

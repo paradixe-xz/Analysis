@@ -17,24 +17,95 @@ class ElevenLabsService {
    * Limpia errores de axios para evitar referencias circulares
    */
   cleanAxiosError(error) {
-    if (error.response) {
+    try {
+      if (error.response) {
+        return {
+          message: error.message,
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data ? JSON.stringify(error.response.data) : null
+        };
+      }
+      if (error.request) {
+        return {
+          message: error.message,
+          code: error.code,
+          type: 'request_error'
+        };
+      }
       return {
-        message: error.message,
-        status: error.response.status,
-        statusText: error.response.statusText,
-        data: error.response.data
+        message: error.message || 'Error desconocido'
+      };
+    } catch (cleanError) {
+      return {
+        message: 'Error al limpiar error de Axios',
+        originalError: error.message
       };
     }
-    if (error.request) {
-      return {
-        message: error.message,
-        code: error.code,
-        type: 'request_error'
-      };
+  }
+
+  /**
+   * Limpia datos de respuesta para evitar referencias circulares
+   */
+  cleanResponseData(data) {
+    try {
+      if (typeof data === 'object' && data !== null) {
+        // Remover propiedades que pueden causar referencias circulares
+        const cleanData = { ...data };
+        delete cleanData._events;
+        delete cleanData._eventsCount;
+        delete cleanData._maxListeners;
+        delete cleanData.socket;
+        delete cleanData.connection;
+        delete cleanData.httpVersion;
+        delete cleanData.httpVersionMajor;
+        delete cleanData.httpVersionMinor;
+        delete cleanData.complete;
+        delete cleanData.headers;
+        delete cleanData.rawHeaders;
+        delete cleanData.trailers;
+        delete cleanData.rawTrailers;
+        delete cleanData.upgrade;
+        delete cleanData.url;
+        delete cleanData.method;
+        delete cleanData.statusCode;
+        delete cleanData.statusMessage;
+        delete cleanData.rawTrailers;
+        delete cleanData.aborted;
+        delete cleanData.abort;
+        delete cleanData.destroy;
+        delete cleanData.end;
+        delete cleanData.write;
+        delete cleanData.setTimeout;
+        delete cleanData.setNoDelay;
+        delete cleanData.setKeepAlive;
+        delete cleanData.pipe;
+        delete cleanData.unpipe;
+        delete cleanData.on;
+        delete cleanData.addListener;
+        delete cleanData.removeListener;
+        delete cleanData.removeAllListeners;
+        delete cleanData.listeners;
+        delete cleanData.listenerCount;
+        delete cleanData.emit;
+        delete cleanData.once;
+        delete cleanData.prependListener;
+        delete cleanData.prependOnceListener;
+        delete cleanData.off;
+        delete cleanData.setMaxListeners;
+        delete cleanData.getMaxListeners;
+        delete cleanData.eventNames;
+        delete cleanData.rawListeners;
+        delete cleanData.setMaxListeners;
+        delete cleanData.getMaxListeners;
+        delete cleanData.eventNames;
+        delete cleanData.rawListeners;
+        return cleanData;
+      }
+      return data;
+    } catch (cleanError) {
+      return '[Data cleaning error]';
     }
-    return {
-      message: error.message || 'Error desconocido'
-    };
   }
 
   /**
@@ -65,7 +136,10 @@ class ElevenLabsService {
         }
       );
 
-      const calls = response.data.conversations || [];
+      // Limpiar datos de respuesta para evitar referencias circulares
+      const cleanResponseData = this.cleanResponseData(response.data);
+      const calls = cleanResponseData.conversations || [];
+      
       logger.info(`Se obtuvieron ${calls.length} llamadas`);
       
       return calls.map(call => this.formatCallData(call));
@@ -111,7 +185,9 @@ class ElevenLabsService {
         }
       );
 
-      return response.data.transcript || '';
+      // Limpiar datos de respuesta para evitar referencias circulares
+      const cleanResponseData = this.cleanResponseData(response.data);
+      return cleanResponseData.transcript || '';
     } catch (error) {
       const cleanError = this.cleanAxiosError(error);
       logger.error(`Error obteniendo transcript para ${conversationId}:`, cleanError);

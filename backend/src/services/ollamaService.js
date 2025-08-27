@@ -40,9 +40,42 @@ class OllamaService {
 
       return this.parseAnalysisResponse(response.message.content, call);
     } catch (error) {
-      logger.error('Error analizando llamada con callAnalyser:', error);
+      // Limpiar error para evitar referencias circulares
+      const cleanError = this.cleanError(error);
+      logger.error('Error analizando llamada con callAnalyser:', cleanError);
       // Fallback al análisis por keywords si Ollama falla
       return this.fallbackAnalysis(call);
+    }
+  }
+
+  /**
+   * Limpia errores para evitar referencias circulares
+   */
+  cleanError(error) {
+    try {
+      if (error.response) {
+        return {
+          message: error.message,
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data ? JSON.stringify(error.response.data) : null
+        };
+      }
+      if (error.request) {
+        return {
+          message: error.message,
+          code: error.code,
+          type: 'request_error'
+        };
+      }
+      return {
+        message: error.message || 'Error desconocido'
+      };
+    } catch (cleanError) {
+      return {
+        message: 'Error al limpiar error',
+        originalError: error.message
+      };
     }
   }
 
@@ -219,8 +252,9 @@ No incluyas texto adicional fuera del JSON.`;
       
       return { status: 'healthy', model: this.model };
     } catch (error) {
-      logger.error('Ollama no disponible:', error);
-      return { status: 'unhealthy', error: error.message };
+      const cleanError = this.cleanError(error);
+      logger.error('Ollama no disponible:', cleanError);
+      return { status: 'unhealthy', error: cleanError.message };
     }
   }
 
@@ -237,7 +271,8 @@ No incluyas texto adicional fuera del JSON.`;
         details: info.details
       };
     } catch (error) {
-      logger.error('Error obteniendo información del modelo:', error);
+      const cleanError = this.cleanError(error);
+      logger.error('Error obteniendo información del modelo:', cleanError);
       return null;
     }
   }

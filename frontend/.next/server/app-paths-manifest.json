@@ -1,4 +1,4 @@
 {
-  "/api/analysis/analyze-calls/route": "app/api/analysis/analyze-calls/route.js",
-  "/page": "app/page.js"
+  "/page": "app/page.js",
+  "/api/analysis/analyze-calls/route": "app/api/analysis/analyze-calls/route.js"
 }

@@ -1,4 +1,4 @@
-// File: C:\Users\herna\Documents\Negocios\0.1. Paradixe\Clientes\B2J\application\frontend\src\app\api\analysis\analyze-calls\route.ts
+// File: /home/dylanvpa/Documents/all/paradixe/Analysis/frontend/src/app/api/analysis/analyze-calls/route.ts
 import * as entry from '../../../../../../src/app/api/analysis/analyze-calls/route.js'
 import type { NextRequest } from 'next/server.js'
 

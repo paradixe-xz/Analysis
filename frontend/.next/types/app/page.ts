@@ -1,4 +1,4 @@
-// File: C:\Users\herna\Documents\Negocios\0.1. Paradixe\Clientes\B2J\application\frontend\src\app\page.tsx
+// File: /home/dylanvpa/Documents/all/paradixe/Analysis/frontend/src/app/page.tsx
 import * as entry from '../../../src/app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
