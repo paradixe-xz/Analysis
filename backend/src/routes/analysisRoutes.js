@@ -79,7 +79,7 @@ router.post('/analyze-calls', async (req, res) => {
     contextLogger.info('Starting call analysis process');
     
     // Analizar llamadas
-    const analysisResult = analysisService.analyzeCalls(calls);
+    const analysisResult = await analysisService.analyzeCalls(calls);
     
     logger.performance('Complete analysis process', startTime, {
       totalCalls: analysisResult.totalCalls,
@@ -130,7 +130,7 @@ router.post('/analyze-single', async (req, res) => {
 
     logger.info(`Analizando llamada individual: ${callData.id}`);
     
-    const result = analysisService.analyzeCall(callData);
+    const result = await analysisService.analyzeCall(callData);
     
     res.json({
       success: true,

@@ -192,16 +192,30 @@ class ElevenLabsService {
    * @returns {Object} Datos formateados
    */
   formatCallData(call) {
+    // Debug logging para ver qué datos recibimos
+    logger.info('Formatting call data:', {
+      conversationId: call.conversation_id,
+      status: call.status,
+      duration: call.call_duration_secs,
+      messageCount: call.message_count,
+      callSuccessful: call.call_successful,
+      direction: call.direction
+    });
+
     return {
-      id: call.conversation_id,
-      name: call.caller_name || 'Desconocido',
-      phone: call.caller_phone || '',
+      id: call.conversation_id || 'unknown',
+      name: call.call_summary_title || 'Sin título',
+      phone: '', // ElevenLabs no proporciona número de teléfono en este endpoint
       status: call.status || 'unknown',
-      duration: call.duration || 0,
-      transcript: call.transcript || '',
-      startTime: call.start_time ? moment.unix(call.start_time).format('YYYY-MM-DD HH:mm:ss') : null,
-      endTime: call.end_time ? moment.unix(call.end_time).format('YYYY-MM-DD HH:mm:ss') : null
-      // Eliminamos rawData: call para evitar referencias circulares
+      duration: call.call_duration_secs || 0,
+      transcript: call.transcript_summary || '',
+      startTime: call.start_time_unix_secs ? moment.unix(call.start_time_unix_secs).format('YYYY-MM-DD HH:mm:ss') : null,
+      endTime: null, // ElevenLabs no proporciona end_time en este endpoint
+      // Campos adicionales de ElevenLabs
+      messageCount: call.message_count || 0,
+      callSuccessful: call.call_successful || 'unknown',
+      direction: call.direction || 'unknown',
+      agentName: call.agent_name || 'Unknown Agent'
     };
   }
 

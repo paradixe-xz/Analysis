@@ -23,10 +23,19 @@ class AnalysisService {
    */
   async analyzeCall(call) {
     try {
-      logger.info(`Analizando llamada ${call.id} con Ollama IA`);
+      logger.info(`Analizando llamada ${call.id} con Ollama IA`, {
+        callData: {
+          id: call.id,
+          status: call.status,
+          duration: call.duration,
+          transcriptLength: call.transcript ? call.transcript.length : 0
+        }
+      });
+      
       return await ollamaService.analyzeCall(call);
     } catch (error) {
       logger.error('Error en análisis con Ollama:', error);
+      logger.info('Usando fallback analysis para llamada:', call.id);
       // Fallback al análisis por keywords
       return this.analyzeCallFallback(call);
     }
@@ -37,6 +46,13 @@ class AnalysisService {
    */
   analyzeCallFallback(call) {
     try {
+      logger.info('Iniciando análisis fallback para llamada:', {
+        callId: call.id,
+        status: call.status,
+        duration: call.duration,
+        transcript: call.transcript ? call.transcript.substring(0, 100) + '...' : 'vacío'
+      });
+      
       const transcript = (call.transcript || '').toLowerCase();
       const status = (call.status || '').toLowerCase();
       const duration = call.duration || 0;
