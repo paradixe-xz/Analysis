@@ -152,21 +152,49 @@ class ElevenLabsService {
         params: requestParams
       });
 
-      // Debug logging de la response
-      logger.info('ElevenLabs response received:', {
-        status: response.status,
-        statusText: response.statusText,
-        dataKeys: response.data ? Object.keys(response.data) : 'no data',
-        conversationsCount: response.data?.conversations?.length || 0
-      });
+      // Debug logging de la respuesta
+      logger.info('=== RESPUESTA DE ELEVENLABS ===');
+      logger.info('Status:', response.status);
+      logger.info('Status Text:', response.statusText);
+      logger.info('Response data type:', typeof response.data);
+      logger.info('Response data keys:', Object.keys(response.data || {}));
+      logger.info('Conversations array type:', typeof response.data.conversations);
+      logger.info('Conversations array length:', response.data.conversations ? response.data.conversations.length : 'undefined');
+      
+      if (response.data.conversations && response.data.conversations.length > 0) {
+        logger.info('Primera conversación:', JSON.stringify(response.data.conversations[0], null, 2));
+      }
+      logger.info('=== FIN RESPUESTA DE ELEVENLABS ===');
 
-      // Limpiar datos de respuesta para evitar referencias circulares
-      const cleanResponseData = this.cleanResponseData(response.data);
-      const calls = cleanResponseData.conversations || [];
+      // Procesar conversaciones
+      const calls = [];
+      if (response.data.conversations && Array.isArray(response.data.conversations)) {
+        logger.info(`Procesando ${response.data.conversations.length} conversaciones`);
+        
+        for (let i = 0; i < response.data.conversations.length; i++) {
+          const conversation = response.data.conversations[i];
+          logger.info(`Procesando conversación ${i + 1}/${response.data.conversations.length}:`, {
+            conversationId: conversation.conversation_id,
+            status: conversation.status
+          });
+          
+          const formattedCall = this.formatCallData(conversation);
+          if (formattedCall) {
+            calls.push(formattedCall);
+            logger.info(`Conversación ${i + 1} formateada exitosamente`);
+          } else {
+            logger.error(`Conversación ${i + 1} falló al formatear`);
+          }
+        }
+      } else {
+        logger.error('No se encontraron conversaciones en la respuesta o no es un array');
+        logger.error('Tipo de conversations:', typeof response.data.conversations);
+        logger.error('Valor de conversations:', response.data.conversations);
+      }
       
-      logger.info(`Se obtuvieron ${calls.length} llamadas`);
+      logger.info(`Total de llamadas procesadas: ${calls.length}`);
       
-      return calls.map(call => this.formatCallData(call));
+      return calls;
     } catch (error) {
       // Debug logging del error
       logger.error('Error completo de Axios:', {
@@ -192,31 +220,47 @@ class ElevenLabsService {
    * @returns {Object} Datos formateados
    */
   formatCallData(call) {
-    // Debug logging para ver qué datos recibimos
-    logger.info('Formatting call data:', {
-      conversationId: call.conversation_id,
+    // Debug logging completo para ver qué datos recibimos
+    logger.info('=== INICIO FORMATTING CALL DATA ===');
+    logger.info('Call object completo:', JSON.stringify(call, null, 2));
+    logger.info('Call type:', typeof call);
+    logger.info('Call keys:', Object.keys(call || {}));
+    
+    // Verificar si call es válido
+    if (!call || typeof call !== 'object') {
+      logger.error('Call es null, undefined o no es un objeto:', call);
+      return null;
+    }
+    
+    // Logging de campos específicos
+    logger.info('Campos específicos:', {
+      conversation_id: call.conversation_id,
       status: call.status,
-      duration: call.call_duration_secs,
-      messageCount: call.message_count,
-      callSuccessful: call.call_successful,
-      direction: call.direction
+      call_duration_secs: call.call_duration_secs,
+      message_count: call.message_count,
+      call_successful: call.call_successful,
+      direction: call.direction,
+      call_summary_title: call.call_summary_title
     });
 
-    return {
-      id: call.conversation_id || 'unknown',
+    // Crear objeto formateado con validaciones
+    const formattedCall = {
+      id: call.conversation_id || `unknown_${Date.now()}`,
       name: call.call_summary_title || 'Sin título',
-      phone: '', // ElevenLabs no proporciona número de teléfono en este endpoint
+      phone: '', // ElevenLabs no proporciona número de teléfono
       status: call.status || 'unknown',
       duration: call.call_duration_secs || 0,
-      transcript: call.transcript_summary || '',
-      startTime: call.start_time_unix_secs ? moment.unix(call.start_time_unix_secs).format('YYYY-MM-DD HH:mm:ss') : null,
-      endTime: null, // ElevenLabs no proporciona end_time en este endpoint
-      // Campos adicionales de ElevenLabs
       messageCount: call.message_count || 0,
-      callSuccessful: call.call_successful || 'unknown',
-      direction: call.direction || 'unknown',
-      agentName: call.agent_name || 'Unknown Agent'
+      callSuccessful: call.call_successful || false,
+      direction: call.direction || 'inbound',
+      timestamp: call.created_at || new Date().toISOString(),
+      transcript: call.transcript || ''
     };
+    
+    logger.info('Call formateado resultante:', formattedCall);
+    logger.info('=== FIN FORMATTING CALL DATA ===');
+    
+    return formattedCall;
   }
 
   /**

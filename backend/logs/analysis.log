@@ -47,3 +47,11 @@
 {"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:14:01.864"}
 {"agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","apiKey":"sk-proj-xx...","baseUrl":"https://api.elevenlabs.io/v1","level":"info","message":"ElevenLabs Service initialized with:","service":"call-analysis-api","timestamp":"2025-08-26 23:14:03.965"}
 {"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:14:04.201"}
+{"agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","apiKey":"sk-proj-xx...","baseUrl":"https://api.elevenlabs.io/v1","level":"info","message":"ElevenLabs Service initialized with:","service":"call-analysis-api","timestamp":"2025-08-26 23:17:21.952"}
+{"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:17:22.211"}
+{"agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","apiKey":"sk-proj-xx...","baseUrl":"https://api.elevenlabs.io/v1","level":"info","message":"ElevenLabs Service initialized with:","service":"call-analysis-api","timestamp":"2025-08-26 23:19:56.815"}
+{"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:19:57.071"}
+{"agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","apiKey":"sk-proj-xx...","baseUrl":"https://api.elevenlabs.io/v1","level":"info","message":"ElevenLabs Service initialized with:","service":"call-analysis-api","timestamp":"2025-08-26 23:20:07.989"}
+{"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:20:08.238"}
+{"agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","apiKey":"sk-proj-xx...","baseUrl":"https://api.elevenlabs.io/v1","level":"info","message":"ElevenLabs Service initialized with:","service":"call-analysis-api","timestamp":"2025-08-26 23:20:17.565"}
+{"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:20:17.819"}
