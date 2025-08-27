@@ -63,3 +63,11 @@
 {"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:24:14.868"}
 {"agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","apiKey":"sk-proj-xx...","baseUrl":"https://api.elevenlabs.io/v1","level":"info","message":"ElevenLabs Service initialized with:","service":"call-analysis-api","timestamp":"2025-08-26 23:24:22.710"}
 {"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:24:22.957"}
+{"agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","apiKey":"sk-proj-xx...","baseUrl":"https://api.elevenlabs.io/v1","level":"info","message":"ElevenLabs Service initialized with:","service":"call-analysis-api","timestamp":"2025-08-26 23:26:37.280"}
+{"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:26:37.529"}
+{"agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","apiKey":"sk-proj-xx...","baseUrl":"https://api.elevenlabs.io/v1","level":"info","message":"ElevenLabs Service initialized with:","service":"call-analysis-api","timestamp":"2025-08-26 23:27:41.441"}
+{"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:27:41.699"}
+{"agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","apiKey":"sk-proj-xx...","baseUrl":"https://api.elevenlabs.io/v1","level":"info","message":"ElevenLabs Service initialized with:","service":"call-analysis-api","timestamp":"2025-08-26 23:29:01.944"}
+{"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:29:02.194"}
+{"agentId":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx","apiKey":"sk-proj-xx...","baseUrl":"https://api.elevenlabs.io/v1","level":"info","message":"ElevenLabs Service initialized with:","service":"call-analysis-api","timestamp":"2025-08-26 23:29:17.304"}
+{"level":"info","message":"Servidor corriendo en puerto 3001","service":"call-analysis-api","timestamp":"2025-08-26 23:29:17.534"}
