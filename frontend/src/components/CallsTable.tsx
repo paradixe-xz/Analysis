@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { DateRange, Call, Analysis, CallCategory } from '@/types'
 import { formatDate, formatDuration, getCategoryColor, truncateText } from '@/lib/utils'
-import { Eye, Download, RefreshCw, Search, Filter } from 'lucide-react'
+import { Eye, Download, RefreshCw, Search, Filter , AlertCircle} from 'lucide-react'
 
 interface CallsTableProps {
   dateRange: DateRange
@@ -157,246 +157,294 @@ export function CallsTable({ dateRange }: CallsTableProps) {
 
   if (loading) {
     return (
-      <Card className="glass-panel">
-        <CardContent className="flex items-center justify-center h-32">
-          <RefreshCw className="h-6 w-6 animate-spin" />
-          <span className="ml-2">Cargando llamadas...</span>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col items-center justify-center p-8 space-y-4">
+        <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
+        <p className="text-gray-500">Loading calls...</p>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <Card className="glass-panel">
-        <CardContent className="flex items-center justify-center h-32">
-          <div className="text-center">
-            <p className="text-sm text-red-500 mb-2">{error}</p>
-            <Button onClick={fetchCalls} size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Reintentar
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="p-4 border border-red-100 bg-red-50 rounded-lg">
+        <div className="flex items-center space-x-2 text-red-700">
+          <AlertCircle className="h-5 w-5" />
+          <p className="text-sm">{error}</p>
+        </div>
+        <div className="mt-3">
+          <Button 
+            onClick={fetchCalls} 
+            variant="outline" 
+            size="sm" 
+            className="border-red-200 text-red-700 hover:bg-red-50"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Try Again
+          </Button>
+        </div>
+      </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      {/* Controles */}
-      <Card className="glass-panel">
-        <CardHeader>
-          <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-            <div>
-              <CardTitle>Llamadas</CardTitle>
-              <CardDescription>
-                {filteredCalls.length} de {calls.length} llamadas
-              </CardDescription>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button onClick={exportToExcel} size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Exportar Excel
-              </Button>
-              <Button onClick={fetchCalls} size="sm" variant="outline">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Actualizar
-              </Button>
-            </div>
+    <div className="space-y-6">
+      {/* Controls */}
+      <div className="space-y-4">
+        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+          <div>
+            <h2 className="text-lg font-medium text-gray-900">Call Logs</h2>
+            <p className="text-sm text-gray-500">
+              Showing {filteredCalls.length} of {calls.length} calls
+            </p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col space-y-2 md:flex-row md:items-center md:space-y-0 md:space-x-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Buscar por nombre o número..."
-                  className="input-base"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <select
-                className="px-3 py-2 border rounded-md bg-white dark:bg-slate-900"
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value as CallCategory | 'all')}
-              >
-                <option value="all">Todas las categorías</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
+          <div className="flex items-center space-x-3">
+            <Button 
+              onClick={fetchCalls} 
+              variant="outline" 
+              size="sm"
+              className="border-gray-200 text-gray-700 hover:bg-gray-50"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            <Button 
+              onClick={exportToExcel} 
+              variant="outline" 
+              size="sm"
+              className="border-gray-200 text-gray-700 hover:bg-gray-50"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Tabla */}
-      <Card className="glass-panel">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto table-sticky zebra">
-            <table className="w-full">
-              <thead className="border-b">
-                <tr className="text-left">
-                  <th className="p-4 font-medium">Fecha/Hora</th>
-                  <th className="p-4 font-medium">Contacto</th>
-                  <th className="p-4 font-medium">Duración</th>
-                  <th className="p-4 font-medium">Estado</th>
-                  <th className="p-4 font-medium">Categoría</th>
-                  <th className="p-4 font-medium">Comentarios</th>
-                  <th className="p-4 font-medium">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedCalls.map((call) => {
+        <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by name or number..."
+              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Filter className="h-4 w-4 text-gray-400" />
+            <select
+              className="text-sm px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value as CallCategory | 'all')}
+            >
+              <option value="all">All Categories</option>
+              {categories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-hidden border border-gray-200 rounded-lg">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date/Time
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Contact
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Duration
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Category
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Summary
+                </th>
+                <th scope="col" className="relative px-6 py-3">
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {paginatedCalls.length > 0 ? (
+                paginatedCalls.map((call) => {
                   const analysis = analyses[call.id]
                   return (
-                    <tr key={call.id} className="border-b hover:bg-muted/50">
-                      <td className="p-4">
-                        <div className="text-sm">
-                          <div>{formatDate(new Date(call.created_at))}</div>
-                          <div className="text-muted-foreground" suppressHydrationWarning>
-                            {new Date(call.created_at).toLocaleTimeString()}
-                          </div>
+                    <tr key={call.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {formatDate(new Date(call.created_at))}
+                        </div>
+                        <div className="text-sm text-gray-500" suppressHydrationWarning>
+                          {new Date(call.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </div>
                       </td>
-                      <td className="p-4">
-                        <div className="text-sm">
-                          <div className="font-medium">{call.caller_name || 'Sin nombre'}</div>
-                          <div className="text-muted-foreground">{call.caller_number}</div>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {call.caller_name || 'Unknown'}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {call.caller_number || '-'}
                         </div>
                       </td>
-                      <td className="p-4 text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDuration(call.duration_seconds)}
                       </td>
-                      <td className="p-4">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           call.status === 'completed' ? 'bg-green-100 text-green-800' :
                           call.status === 'failed' ? 'bg-red-100 text-red-800' :
                           'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {call.status}
+                          {call.status.charAt(0).toUpperCase() + call.status.slice(1)}
                         </span>
                       </td>
-                      <td className="p-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         {analysis ? (
                           <span 
-                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
                             style={{ backgroundColor: getCategoryColor(analysis.category) }}
                           >
                             {analysis.category}
                           </span>
                         ) : (
-                          <span className="text-muted-foreground text-xs">Analizando...</span>
+                          <div className="h-2.5 w-20 bg-gray-200 rounded-full animate-pulse"></div>
                         )}
                       </td>
-                      <td className="p-4 text-sm max-w-xs">
+                      <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
                         {analysis?.comments ? (
-                          <span title={analysis.comments}>
-                            {truncateText(analysis.comments, 50)}
+                          <span title={analysis.comments} className="line-clamp-2">
+                            {analysis.comments}
                           </span>
                         ) : (
-                          <span className="text-muted-foreground">-</span>
+                          <span className="text-gray-400">-</span>
                         )}
                       </td>
-                      <td className="p-4">
-                        <Button
-                          size="sm"
-                          variant="outline"
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
                           onClick={() => viewTranscript(call)}
+                          className="text-blue-600 hover:text-blue-900"
                         >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Ver
-                        </Button>
+                          View
+                        </button>
                       </td>
                     </tr>
                   )
-                })}
-              </tbody>
-            </table>
-          </div>
-          
-          {filteredCalls.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No se encontraron llamadas</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                })
+              ) : (
+                <tr>
+                  <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500">
+                    No calls found matching your criteria
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-      {/* Paginación cliente */}
+      {/* Pagination */}
       {filteredCalls.length > 0 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            Mostrando {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, filteredCalls.length)} de {filteredCalls.length}
+        <div className="flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
+          <div className="text-sm text-gray-500">
+            Showing <span className="font-medium">{(page - 1) * pageSize + 1}</span> to{' '}
+            <span className="font-medium">{Math.min(page * pageSize, filteredCalls.length)}</span> of{' '}
+            <span className="font-medium">{filteredCalls.length}</span> results
           </div>
-          <div className="space-x-2">
-            <Button size="sm" variant="outline" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Anterior</Button>
-            <Button size="sm" variant="outline" disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Siguiente</Button>
+          <div className="flex items-center space-x-2">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              disabled={page === 1} 
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              className="border-gray-200 text-gray-700 hover:bg-gray-50"
+            >
+              Previous
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              disabled={page === totalPages} 
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              className="border-gray-200 text-gray-700 hover:bg-gray-50"
+            >
+              Next
+            </Button>
           </div>
         </div>
       )}
 
-      {/* Modal de transcripción */}
+      {/* Transcript Modal */}
       {showTranscript && selectedCall && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-4xl max-h-[80vh] overflow-hidden glass-panel">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Transcripción de Llamada</CardTitle>
-                  <CardDescription>
-                    {selectedCall.caller_name} - {formatDate(new Date(selectedCall.created_at))}
-                  </CardDescription>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowTranscript(false)}
-                >
-                  Cerrar
-                </Button>
+          <div className="w-full max-w-4xl max-h-[90vh] flex flex-col bg-white rounded-xl shadow-xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">Call Transcript</h3>
+                <p className="text-sm text-gray-500">
+                  {selectedCall.caller_name || 'Unknown'} • {formatDate(new Date(selectedCall.created_at))}
+                </p>
               </div>
-            </CardHeader>
-            <CardContent className="overflow-y-auto">
-              <div className="space-y-4">
-                {analyses[selectedCall.id] && (
-                  <div className="p-4 bg-muted rounded-lg">
-                    <h4 className="font-medium mb-2">Análisis</h4>
-                    <div className="flex items-center space-x-4 mb-2">
-                      <span 
-                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
-                        style={{ backgroundColor: getCategoryColor(analyses[selectedCall.id].category) }}
-                      >
-                        {analyses[selectedCall.id].category}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        Confianza: {(analyses[selectedCall.id].confidence * 100).toFixed(1)}%
-                      </span>
+              <button
+                onClick={() => setShowTranscript(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {analyses[selectedCall.id] && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">Analysis</h4>
+                  <div className="flex flex-wrap items-center gap-3 mb-3">
+                    <span 
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
+                      style={{ backgroundColor: getCategoryColor(analyses[selectedCall.id].category) }}
+                    >
+                      {analyses[selectedCall.id].category}
+                    </span>
+                    <div className="text-sm text-gray-500">
+                      Confidence: <span className="font-medium">{(analyses[selectedCall.id].confidence * 100).toFixed(1)}%</span>
                     </div>
-                    {analyses[selectedCall.id].comments && (
-                      <p className="text-sm">{analyses[selectedCall.id].comments}</p>
-                    )}
                   </div>
-                )}
-                
-                <div>
-                  <h4 className="font-medium mb-2">Transcripción</h4>
-                  <div className="p-4 bg-muted rounded-lg">
-                    <p className="text-sm whitespace-pre-wrap">
-                      {selectedCall.transcript || 'Transcripción no disponible'}
-                    </p>
-                  </div>
+                  {analyses[selectedCall.id].comments && (
+                    <div className="text-sm text-gray-700 bg-white p-3 rounded-md border border-gray-200">
+                      {analyses[selectedCall.id].comments}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Transcript</h4>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                    {selectedCall.transcript || 'No transcript available'}
+                  </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+              <Button 
+                onClick={() => setShowTranscript(false)}
+                className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

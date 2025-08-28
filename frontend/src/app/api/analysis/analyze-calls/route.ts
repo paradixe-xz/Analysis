@@ -1,14 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import API_CONFIG from '@/lib/api'
 
-const BACKEND_URL = process.env.BACKEND_URL || 'https://c9d4sqomvuc6wy-3001.proxy.runpod.net'
-
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const body = await request.json()
     
-    console.log('Calling backend:', `${BACKEND_URL}/api/analysis/analyze-calls`)
-    
-    const response = await fetch(`${BACKEND_URL}/api/analysis/analyze-calls`, {
+    const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.analysis}/analyze-calls`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -18,16 +15,15 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Backend error:', response.status, errorText)
-      throw new Error(`Backend responded with status: ${response.status} - ${errorText}`)
+      throw new Error(`Backend error: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
     return NextResponse.json(data)
   } catch (error) {
-    console.error('Error in analyze-calls API route:', error)
+    console.error('Error analyzing calls:', error)
     return NextResponse.json(
-      { error: 'Failed to analyze calls', details: error.message },
+      { error: error instanceof Error ? error.message : 'Error al analizar las llamadas' },
       { status: 500 }
     )
   }

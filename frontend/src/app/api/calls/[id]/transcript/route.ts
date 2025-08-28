@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-
-const BACKEND_URL = process.env.BACKEND_URL || 'https://c9d4sqomvuc6wy-3001.proxy.runpod.net'
+import { NextResponse } from 'next/server'
+import API_CONFIG from '@/lib/api'
 
 export async function GET(
-  request: NextRequest,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -15,11 +14,9 @@ export async function GET(
         { status: 400 }
       )
     }
-
-    console.log('Fetching transcript from backend:', `${BACKEND_URL}/api/calls/${id}/transcript`)
     
     const response = await fetch(
-      `${BACKEND_URL}/api/calls/${id}/transcript`,
+      `${API_CONFIG.baseURL}${API_CONFIG.endpoints.calls}/${id}/transcript`,
       {
         method: 'GET',
         headers: {
@@ -30,16 +27,16 @@ export async function GET(
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Backend error:', response.status, errorText)
-      throw new Error(`Backend responded with status: ${response.status} - ${errorText}`)
+      console.error('Backend error:', errorText)
+      throw new Error(`Backend error: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
     return NextResponse.json(data)
   } catch (error) {
-    console.error('Error in calls/[id]/transcript API route:', error)
+    console.error('Error fetching transcript:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch transcript', details: error.message },
+      { error: error instanceof Error ? error.message : 'Error al obtener la transcripción' },
       { status: 500 }
     )
   }

@@ -87,17 +87,12 @@ export function Dashboard({ dateRange }: DashboardProps) {
   if (loading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(8)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="h-4 bg-gray-200 rounded w-24"></div>
-              <div className="h-4 w-4 bg-gray-200 rounded"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-32"></div>
-            </CardContent>
-          </Card>
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="animate-pulse bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+            <div className="h-4 bg-gray-100 rounded w-3/4 mb-4"></div>
+            <div className="h-8 bg-gray-100 rounded w-1/2 mb-2"></div>
+            <div className="h-3 bg-gray-100 rounded w-5/6"></div>
+          </div>
         ))}
       </div>
     )
@@ -105,24 +100,20 @@ export function Dashboard({ dateRange }: DashboardProps) {
 
   if (error) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center h-32">
-          <div className="text-center">
-            <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">{error}</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
+        <div className="flex items-center space-x-2 text-red-700">
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
+          <p className="text-sm">{error}</p>
+        </div>
+      </div>
     )
   }
 
   if (!stats) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center h-32">
-          <p className="text-sm text-muted-foreground">No hay datos disponibles</p>
-        </CardContent>
-      </Card>
+      <div className="p-6 text-center bg-white rounded-lg border border-gray-100 shadow-sm">
+        <p className="text-gray-500">No data available for the selected period</p>
+      </div>
     )
   }
 
@@ -137,167 +128,209 @@ export function Dashboard({ dateRange }: DashboardProps) {
 
   return (
     <div className="space-y-6">
-      {/* Métricas principales */}
+      {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Llamadas</CardTitle>
-            <Phone className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatNumber(stats.total)}</div>
-            <p className="text-xs text-muted-foreground">
-              En el período seleccionado
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tasa de Éxito</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatPercentage(successRate, 1)}
+        {/* Total Calls Card */}
+        <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm hover:shadow transition-shadow">
+          <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+            <span>Total Calls</span>
+            <div className="p-1.5 rounded-full bg-blue-50 text-blue-600">
+              <Phone className="h-4 w-4" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              {stats.byCategory.Lead || 0} leads generados
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-2xl font-semibold text-gray-900 mb-1">
+            {formatNumber(stats.total)}
+          </div>
+          <div className="text-xs text-gray-500">
+            In selected period
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completadas</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {formatPercentage(completionRate, 1)}
+        {/* Success Rate Card */}
+        <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm hover:shadow transition-shadow">
+          <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+            <span>Success Rate</span>
+            <div className="p-1.5 rounded-full bg-green-50 text-green-600">
+              <TrendingUp className="h-4 w-4" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              {stats.byCategory.Completed || 0} llamadas completadas
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-2xl font-semibold text-green-600 mb-1">
+            {formatPercentage(successRate, 1)}
+          </div>
+          <div className="text-xs text-gray-500">
+            {stats.byCategory.Lead || 0} leads generated
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sin Respuesta</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {stats.byCategory['No Answer'] || 0}
+        {/* Completed Calls Card */}
+        <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm hover:shadow transition-shadow">
+          <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+            <span>Completed</span>
+            <div className="p-1.5 rounded-full bg-blue-50 text-blue-600">
+              <CheckCircle className="h-4 w-4" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Llamadas no contestadas
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-2xl font-semibold text-blue-600 mb-1">
+            {formatPercentage(completionRate, 1)}
+          </div>
+          <div className="text-xs text-gray-500">
+            {stats.byCategory.Completed || 0} completed calls
+          </div>
+        </div>
+
+        {/* No Answer Card */}
+        <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm hover:shadow transition-shadow">
+          <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+            <span>No Answer</span>
+            <div className="p-1.5 rounded-full bg-orange-50 text-orange-600">
+              <Users className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-semibold text-orange-600 mb-1">
+            {stats.byCategory['No Answer'] || 0}
+          </div>
+          <div className="text-xs text-gray-500">
+            Unanswered calls
+          </div>
+        </div>
       </div>
 
-      {/* Gráficos */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Gráfico de barras por categoría */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribución por Categoría</CardTitle>
-            <CardDescription>
-              Número de llamadas por cada categoría de análisis
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+      {/* Charts */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Category Distribution */}
+        <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm">
+          <div className="mb-4">
+            <h3 className="text-base font-medium text-gray-900">Category Distribution</h3>
+            <p className="text-sm text-gray-500">Number of calls per category</p>
+          </div>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart data={categoryData}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
                 <XAxis 
                   dataKey="name" 
+                  axisLine={false}
+                  tickLine={false}
                   angle={-45}
                   textAnchor="end"
-                  height={80}
-                  fontSize={12}
+                  height={60}
+                  tick={{ fontSize: 12, fill: '#6b7280' }}
                 />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#8884d8">
+                <YAxis 
+                  tickFormatter={(value) => value.toLocaleString()}
+                  tick={{ fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip 
+                  formatter={(value) => [value, 'Calls']}
+                  labelFormatter={(label) => `Category: ${label}`}
+                  contentStyle={{
+                    background: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '0.5rem',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+                    padding: '0.5rem',
+                    fontSize: '0.875rem'
+                  }}
+                />
+                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                   {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={entry.color}
+                      className="hover:opacity-80 transition-opacity"
+                    />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Gráfico circular */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Proporción de Resultados</CardTitle>
-            <CardDescription>
-              Distribución porcentual de los tipos de llamada
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+        {/* Category Breakdown */}
+        <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm">
+          <div className="mb-4">
+            <h3 className="text-base font-medium text-gray-900">Category Breakdown</h3>
+            <p className="text-sm text-gray-500">Percentage distribution of call categories</p>
+          </div>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={categoryData}
+                  data={categoryData.filter(item => item.value > 0)}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   outerRadius={80}
-                  fill="#8884d8"
+                  innerRadius={40}
+                  paddingAngle={2}
                   dataKey="value"
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                 >
                   {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={entry.color}
+                      className="hover:opacity-80 transition-opacity"
+                    />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  formatter={(value, name, props) => [
+                    value, 
+                    props.payload.name,
+                  ]}
+                  labelFormatter={() => ''}
+                  contentStyle={{
+                    background: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '0.5rem',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+                    padding: '0.5rem',
+                    fontSize: '0.875rem'
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
-      {/* Detalles por categoría */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Resumen Detallado</CardTitle>
-          <CardDescription>
-            Análisis detallado de cada categoría de llamada
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-2">
-            {Object.entries(stats.byCategory)
-              .sort(([,a], [,b]) => b - a)
-              .map(([category, count]) => {
-                const percentage = stats.total > 0 ? (count / stats.total) * 100 : 0
-                return (
-                  <div key={category} className="flex items-center justify-between p-2 rounded-lg border">
-                    <div className="flex items-center space-x-3">
-                      <div 
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: getCategoryColor(category as CallCategory) }}
-                      />
-                      <span className="font-medium">{category}</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold">{count}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatPercentage(percentage, 1)}
-                      </div>
+      {/* Detailed Summary */}
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-lg font-medium text-gray-900">Detailed Summary</h3>
+          <p className="text-sm text-gray-500">Breakdown of call categories</p>
+        </div>
+        <div className="space-y-2">
+          {Object.entries(stats.byCategory)
+            .sort(([,a], [,b]) => b - a)
+            .map(([category, count]) => {
+              const percentage = stats.total > 0 ? (count / stats.total) * 100 : 0
+              return (
+                <div 
+                  key={category} 
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div 
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: getCategoryColor(category as CallCategory) }}
+                    />
+                    <span className="text-sm font-medium text-gray-900">{category}</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium text-gray-900">{count}</div>
+                    <div className="text-xs text-gray-400">
+                      {formatPercentage(percentage, 1)}
                     </div>
                   </div>
-                )
-              })}
-          </div>
-        </CardContent>
-      </Card>
+                </div>
+              )
+            })}
+        </div>
+      </div>
     </div>
   )
 }

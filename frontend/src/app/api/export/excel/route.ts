@@ -1,13 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import API_CONFIG from '@/lib/api'
 
-// Cambiar a la URL de RunPod
-const BACKEND_URL = process.env.BACKEND_URL || 'https://c9d4sqomvuc6wy-3001.proxy.runpod.net'
-
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const body = await request.json()
     
-    const response = await fetch(`${BACKEND_URL}/api/export/excel`, {
+    const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.export}/excel`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -16,20 +14,20 @@ export async function POST(request: NextRequest) {
     })
 
     if (!response.ok) {
-      throw new Error(`Backend responded with status: ${response.status}`)
+      const error = await response.text()
+      throw new Error(`Backend error: ${error}`)
     }
 
     const blob = await response.blob()
-    return new NextResponse(blob, {
-      headers: {
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': 'attachment; filename="llamadas.xlsx"',
-      },
-    })
+    const headers = new Headers()
+    headers.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    headers.set('Content-Disposition', 'attachment; filename="llamadas.xlsx"')
+
+    return new NextResponse(blob, { headers })
   } catch (error) {
-    console.error('Error in export/excel API route:', error)
+    console.error('Error exporting to Excel:', error)
     return NextResponse.json(
-      { error: 'Failed to export Excel', details: error.message },
+      { error: error instanceof Error ? error.message : 'Error al exportar a Excel' },
       { status: 500 }
     )
   }
