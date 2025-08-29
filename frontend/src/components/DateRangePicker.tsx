@@ -62,7 +62,7 @@ export function DateRangePicker({ dateRange, onDateRangeChange }: DateRangePicke
         {dateRange.from ? (
           dateRange.to ? (
             <>
-              {formatDate(dateRange.from)} - {formatDate(dateRange.to)}
+             Fecha
             </>
           ) : (
             formatDate(dateRange.from)

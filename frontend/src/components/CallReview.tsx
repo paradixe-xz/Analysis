@@ -2,8 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { ThumbsUp, ThumbsDown, Loader2, Volume2 } from 'lucide-react'
+import { ThumbsUp, ThumbsDown, Loader2, Volume2, RefreshCw } from 'lucide-react'
 import { formatDate, formatDuration } from '@/lib/utils'
+
+interface TranscriptMessage {
+  role: 'user' | 'assistant' | 'agent' | 'system'
+  text: string
+  [key: string]: any
+}
 
 type Call = {
   id: string
@@ -11,7 +17,7 @@ type Call = {
   caller_number: string
   status: string
   duration_seconds: number
-  transcript: string
+  transcript: string | TranscriptMessage[]
   created_at: string
   rawData: any
 }
@@ -32,25 +38,47 @@ export function CallReview() {
   const [feedback, setFeedback] = useState<'positive' | 'negative' | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
 
-  // Fetch calls - in a real app, this would be an API call
+  // Fetch calls from the API
   useEffect(() => {
     const fetchCalls = async () => {
       try {
         setIsLoading(true)
-        // This would be replaced with an actual API call
-        // const response = await fetch('/api/calls')
-        // const data = await response.json()
-        // setCalls(data.calls)
+        // Get date range for the last 7 days
+        const endDate = new Date().toISOString().split('T')[0]
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - 7)
+        const startDateStr = startDate.toISOString().split('T')[0]
         
-        // Mock data for now
-        setTimeout(() => {
-          setCalls([
-            // Add sample call data here
-          ])
-          setIsLoading(false)
-        }, 1000)
+        const response = await fetch(`/api/calls/date-range?startDate=${startDateStr}&endDate=${endDate}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch calls')
+        }
+        
+        const data = await response.json()
+        if (data.data && Array.isArray(data.data)) {
+          // Map the API response to the expected Call type
+          const formattedCalls = data.data.map((call: any) => ({
+            id: call.id || `unknown-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            caller_name: call.name || 'Unknown Caller',
+            caller_number: call.phone || 'Unknown Number',
+            status: call.status || 'unknown',
+            duration_seconds: call.duration || 0,
+            transcript: call.transcript 
+              ? Array.isArray(call.transcript) 
+                ? (call.transcript as TranscriptMessage[]).map((msg: TranscriptMessage) => 
+                    `${msg.role === 'user' ? 'Cliente' : 'Agente'}: ${msg.text || ''}`
+                  ).join('\n\n')
+                : String(call.transcript)
+              : '',
+            created_at: call.timestamp || new Date().toISOString(),
+            rawData: call
+          }))
+          
+          setCalls(formattedCalls)
+        }
       } catch (error) {
         console.error('Error fetching calls:', error)
+      } finally {
         setIsLoading(false)
       }
     }
@@ -64,29 +92,83 @@ export function CallReview() {
   const analyzeCall = async (callId: string) => {
     try {
       setIsAnalyzing(true)
-      // This would be replaced with an actual API call
-      // const response = await fetch(`/api/analyze/${callId}`)
-      // const data = await response.json()
       
-      // Mock analysis
-      setTimeout(() => {
-        setAnalysis(prev => ({
-          ...prev,
-          [callId]: {
-            category: 'Lead',
-            confidence: 0.87,
-            comments: 'The caller showed interest in our premium plan and requested a callback.',
-            keyPoints: [
-              'Interested in premium features',
-              'Requested a callback',
-              'Currently using a competitor\'s service'
-            ]
-          }
-        }))
-        setIsAnalyzing(false)
-      }, 1500)
+      const call = calls.find(c => c.id === callId)
+      if (!call) {
+        throw new Error('Call not found')
+      }
+      
+      // If we already have analysis, don't analyze again
+      if (analysis[callId]) {
+        return
+      }
+      
+      // First, try to get the transcript if it's not available
+      let transcript = call.transcript
+      if (!transcript) {
+        const transcriptResponse = await fetch(`/api/calls/${callId}/transcript`)
+        if (transcriptResponse.ok) {
+          const transcriptData = await transcriptResponse.json()
+          transcript = transcriptData.transcript || ''
+          
+          // Update the call with the fetched transcript
+          setCalls(prevCalls => 
+            prevCalls.map(c => 
+              c.id === callId ? { ...c, transcript } : c
+            )
+          )
+        }
+      }
+      
+      // If we still don't have a transcript, we can't analyze
+      if (!transcript) {
+        throw new Error('No transcript available for analysis')
+      }
+      
+      // Call the analysis API
+      const response = await fetch('/api/analysis/analyze-calls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          callId,
+          transcript: [transcript], // Convert to array as expected by the API
+        }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to analyze call')
+      }
+      
+      const result = await response.json()
+      
+      // Map the API response to our Analysis type
+      const analysisResult: Analysis = {
+        category: result.category || 'Unknown',
+        confidence: result.confidence || 0,
+        comments: result.comment || 'No analysis available',
+        keyPoints: result.keyPoints || []
+      }
+      
+      setAnalysis(prev => ({
+        ...prev,
+        [callId]: analysisResult
+      }))
+      
     } catch (error) {
       console.error('Error analyzing call:', error)
+      // Fallback to a default analysis if the API call fails
+      setAnalysis(prev => ({
+        ...prev,
+        [callId]: {
+          category: 'Unknown',
+          confidence: 0,
+          comments: 'Unable to analyze this call. ' + (error instanceof Error ? error.message : 'Unknown error'),
+          keyPoints: []
+        }
+      }))
+    } finally {
       setIsAnalyzing(false)
     }
   }
@@ -114,39 +196,77 @@ export function CallReview() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        <span className="ml-2 text-gray-500">Loading calls...</span>
+      <div className="flex flex-col items-center justify-center h-64 space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+        <span className="text-gray-600">Loading call data...</span>
+        <p className="text-sm text-gray-500">This may take a moment</p>
       </div>
     )
   }
 
   if (calls.length === 0) {
     return (
-      <div className="text-center py-12">
-        <h3 className="text-lg font-medium text-gray-900">No calls to review</h3>
-        <p className="mt-1 text-sm text-gray-500">New calls will appear here as they come in.</p>
+      <div className="text-center py-12 px-4">
+        <h3 className="text-lg font-medium text-gray-900">No calls found</h3>
+        <p className="mt-2 text-gray-500">
+          {isLoading ? 'Loading...' : 'No calls were found for the selected date range.'}
+        </p>
+        <Button 
+          variant="outline" 
+          className="mt-4"
+          onClick={() => window.location.reload()}
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Refresh
+        </Button>
       </div>
     )
   }
 
+  // Format confidence as percentage
+  const formatConfidence = (confidence: number) => {
+    return Math.round(confidence * 100) + '%';
+  };
+
+  // Get color based on call status
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      case 'in-progress':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div className="w-full max-w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       {/* Call Header */}
       <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2 className="text-lg font-medium text-gray-900">Call Review</h2>
-            <p className="text-sm text-gray-500">
-              Call {currentCallIndex + 1} of {calls.length}
-            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-sm text-gray-500">
+                Call {currentCallIndex + 1} of {calls.length}
+              </span>
+              {currentCall?.status && (
+                <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(currentCall.status)}`}>
+                  {currentCall.status}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-2">
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handlePreviousCall}
-              disabled={currentCallIndex === 0}
+              disabled={currentCallIndex === 0 || isAnalyzing}
+              className="px-3"
             >
               Previous
             </Button>
@@ -154,21 +274,22 @@ export function CallReview() {
               variant="outline" 
               size="sm" 
               onClick={handleNextCall}
-              disabled={currentCallIndex === calls.length - 1}
+              disabled={currentCallIndex === calls.length - 1 || isAnalyzing}
             >
               Next
             </Button>
           </div>
         </div>
       </div>
-
-      {/* Call Content */}
-      <div className="p-6">
-        {currentCall && (
-          <div className="space-y-6">
-            {/* Call Info */}
+      
+      {/* Call Details */}
+      <div className="p-6 w-full">
+        <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Left Column - Call Info */}
+          <div className="md:col-span-2 space-y-6 w-full">
             <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex items-start justify-between">
+              <h3 className="font-medium text-gray-900 mb-3">Call Information</h3>
+              <div className="space-y-3">
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">
                     {currentCall.caller_name || 'Unknown Caller'}
@@ -286,13 +407,13 @@ export function CallReview() {
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-gray-900">Transcript</h3>
                 <span className="text-xs text-gray-500">
-                  {currentCall.transcript ? `${currentCall.transcript.split(' ').length} words` : 'No transcript available'}
+                  {currentCall.transcript ? `${String(currentCall.transcript).split(/\s+/).filter(Boolean).length} words` : 'No transcript available'}
                 </span>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div className="w-full bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
                 {currentCall.transcript ? (
                   <div className="prose prose-sm max-w-none">
-                    {currentCall.transcript.split('\n').map((paragraph, i) => (
+                    {String(currentCall.transcript).split('\n').map((paragraph, i) => (
                       <p key={i} className="text-gray-700">
                         {paragraph || <br />}
                       </p>
@@ -304,7 +425,7 @@ export function CallReview() {
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   )

@@ -175,7 +175,17 @@ class ElevenLabsService {
         // Formatear y acumular
         for (let i = 0; i < conversations.length; i++) {
           const formatted = this.formatCallData(conversations[i]);
-          if (formatted) allCalls.push(formatted);
+          if (formatted) {
+            // Obtener el transcript completo para esta conversación
+            try {
+              const fullTranscript = await this.getConversationTranscript(conversations[i].conversation_id);
+              formatted.transcript = fullTranscript || formatted.transcript;
+            } catch (error) {
+              logger.error(`Error obteniendo transcript para ${conversations[i].conversation_id}:`, error);
+              // Mantener el resumen del transcript si hay un error
+            }
+            allCalls.push(formatted);
+          }
         }
 
         // Actualizar cursor/página
@@ -265,18 +275,45 @@ class ElevenLabsService {
    */
   async getConversationTranscript(conversationId) {
     try {
+      logger.info(`Solicitando transcript para conversación: ${conversationId}`);
+      
       const response = await axios.get(
         `${this.baseUrl}/convai/conversations/${conversationId}`,
         {
           headers: {
-            'xi-api-key': this.apiKey
-          }
+            'xi-api-key': this.apiKey,
+            'Content-Type': 'application/json'
+          },
+          timeout: 30000 // 30 segundos de timeout
         }
       );
 
       // Limpiar datos de respuesta para evitar referencias circulares
       const cleanResponseData = this.cleanResponseData(response.data);
-      return cleanResponseData.transcript || '';
+      
+      // Verificar si hay un transcript en la respuesta
+      if (cleanResponseData.transcript) {
+        logger.info(`Transcript obtenido para ${conversationId} (${cleanResponseData.transcript.length} caracteres)`);
+        return cleanResponseData.transcript;
+      } 
+      
+      // Si no hay transcript, intentar extraerlo de los mensajes
+      if (cleanResponseData.messages && Array.isArray(cleanResponseData.messages)) {
+        const transcript = cleanResponseData.messages
+          .map(msg => `${msg.role === 'user' ? 'Cliente' : 'Agente'}: ${msg.text || ''}`)
+          .join('\n\n');
+          
+        if (transcript) {
+          logger.info(`Transcript construido a partir de mensajes para ${conversationId}`);
+          return transcript;
+        }
+      }
+      
+      logger.warn(`No se pudo obtener el transcript para ${conversationId}`, {
+        responseKeys: Object.keys(cleanResponseData)
+      });
+      
+      return '';
     } catch (error) {
       const cleanError = this.cleanAxiosError(error);
       logger.error(`Error obteniendo transcript para ${conversationId}:`, cleanError);
